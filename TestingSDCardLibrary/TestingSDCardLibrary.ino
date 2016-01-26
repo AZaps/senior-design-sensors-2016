@@ -1,6 +1,7 @@
 // Libraries needed
 #include <SDCardLibraryFunctions.h>
 #include <stdlib.h>
+#include <LiquidCrystal.h>
 
 // STRINGS ARE BAD...DO NOT USE STRINGS....
 
@@ -11,38 +12,45 @@ File root;                            // Directory path
 File myFile;                          // Filename path
 int sensorDataInt = 0;                // Hold the string data from the sensor
 char sensorDataChar[12];              // Holds the converted sensor data from the integer
-int timeDataInt;
-char timeDataTemp[5];
+int timeDataInt;                      // Holds integer value of time
+char timeDataTemp[5];                 // Temporary holder for integer to char conversion
 char directoryPath[21] = "/sendata/"; // Hold the directory pathname when passed through the library functions
-char fullInput[32];
+char fullInput[32];                   // Holds the full inputted save file
 
 int analogPin = 0;
 
-int sensorCounter = 0;
+int sensorCounter = 0;                // Sensor counter variable
 
-int ledPin = 7;
+bool isSDCardFunctional;
+
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);  // Initialize the library with the numbers of the interface pins
+
+
 
 void setup() {
 
-  pinMode(ledPin, OUTPUT);
-  
+  // Set the LCD's number of columns and rows
+  lcd.begin(16, 2);
+
   // Initialize the SD card
-  clarity = sdCardFunctions.initializeSD(10,8);
+  clarity = sdCardFunctions.initializeSD(10, 8);
   // Check for return value
   if (clarity) {
-   Serial.println(F("Correctly initialized through SDCardFunctionsLibrary"));
+    Serial.println(F("Correctly initialized through SDCardFunctionsLibrary"));
+    lcd.print("SD card found");
+    isSDCardFunctional = true;
   } else {
     Serial.println(F("Incorrectly initialized through SDCardFunctionsLibrary"));
-    digitalWrite(ledPin,HIGH);
-    while (true) {}
+    lcd.print("SD card");
+    lcd.setCursor(0, 1);
+    lcd.print("not found");
+    isSDCardFunctional = false;
   }
-  
-  getMemoryNumber();
 
   delayThree(); // Short Delay
 
   // Set the time
-  setTime(10,30,00,1,1,15); // hr, min, sec, day, month, yr
+  setTime(10, 30, 00, 5, 1, 15); // hr, min, sec, day, month, yr
 
   Serial.println(F("\nEnd of setup()"));
   Serial.println(F("\n\n"));
@@ -50,7 +58,10 @@ void setup() {
 
 
 void loop() {
-  switch(sensorCounter) {
+  // Clear LCD display
+  clearLCD();
+
+  switch (sensorCounter) {
     case 0:
       Serial.println(F("On case 0..."));
       strcat(directoryPath, "analog0.txt");
@@ -83,10 +94,10 @@ void loop() {
       break;
   }
 
-  
+
   getMemoryNumber();
 
-  
+
   // Get the current time
   timeDataInt = month();
   itoa(timeDataInt, timeDataTemp, 10);
@@ -130,8 +141,11 @@ void loop() {
   Serial.println(sensorDataChar);
 
 
-  // Select the correct file path name. Should use a switch statement here based on for loop number for selecting the
-  // correct file pathname
+  printSensorDataLCD(analogPin, sensorDataInt);
+  printTime();
+
+
+  // Select the correct file path name.
   Serial.print("Attempt to write to ");
   Serial.print(directoryPath);
   Serial.print("...");
@@ -139,7 +153,7 @@ void loop() {
 
   strcat(fullInput, sensorDataChar);
 
-  
+
   // Prepare for writing to the SD card
   myFile = SD.open(directoryPath, FILE_WRITE);
   clarity = sdCardFunctions.writeToSD(myFile, fullInput, directoryPath);
@@ -148,12 +162,11 @@ void loop() {
     getMemoryNumber();
   } else {
     Serial.println("Something happened. Either the file did not open correctly or not saved correctly");
+    isSDCardFunctional = false;
     getMemoryNumber();
-    digitalWrite(ledPin,HIGH);
-    while (true) {}
   }
 
-  
+
   // Reading from the SD card. Don't need this later, only for testing purposes and writing checking
   myFile = SD.open(directoryPath);
   clarity = sdCardFunctions.readFromSD(myFile, directoryPath);
@@ -164,13 +177,12 @@ void loop() {
   } else {
     Serial.print("Could not read from ");
     Serial.println(directoryPath);
+    isSDCardFunctional = false;
     getMemoryNumber();
-    digitalWrite(ledPin,HIGH);
-    while (true) {}
   }
   myFile.close();
 
-  
+
   // Revert all the variables for the next read
   sensorDataInt = 0;
   memset(sensorDataChar, 0, sizeof(sensorDataChar));
@@ -178,14 +190,33 @@ void loop() {
   memset(fullInput, 0, sizeof(fullInput));
   memset(directoryPath, 0, sizeof(directoryPath));
 
-
   strcat(directoryPath, "/sendata/");
 
+
+  if (isSDCardFunctional == false) {
+    delay(3000);
+    clearLCD();
+    lcd.print("Data not saved");
+    lcd.setCursor(0, 1);
+    lcd.print("Insert SD Card");
+    delay(3000);
+    clearLCD();
+
+    // Check if SD card was inserted
+    clarity = sdCardFunctions.initializeSD(10, 8);
+    // Check for return value
+    if (clarity) {
+      Serial.println(F("Correctly initialized through SDCardFunctionsLibrary"));
+      lcd.print("SD card found");
+      isSDCardFunctional = true;
+    }
+  }
 
   Serial.println("End of loop. Delay 5 seconds.");
   getMemoryNumber();
   delay(5000);
   Serial.println("-----------------------------------------------------------------------\n");
+
 } // End of loop()
 
 void delayThree() {
@@ -203,6 +234,28 @@ void getMemoryNumber() {
   Serial.println(freeMemory());
 }
 
+void clearLCD() {
+  lcd.setCursor(0, 0);
+  lcd.print("                ");
+  lcd.setCursor(0, 1);
+  lcd.print("                ");
+  lcd.setCursor(0, 0);
+}
+
+void printTime() {
+  lcd.setCursor(0, 1);
+  lcd.print(hour());
+  lcd.print(":");
+  lcd.print(minute());
+}
+
+void printSensorDataLCD(int sensorNumber, int sensorValue) {
+  lcd.setCursor(0, 0);
+  lcd.print("Sensor ");
+  lcd.print(sensorNumber);
+  lcd.print(" ");
+  lcd.print(sensorValue);
+}
 
 
 
