@@ -17,13 +17,17 @@ char timeDataTemp[5];                 // Temporary holder for integer to char co
 char directoryPath[21] = "/sendata/"; // Hold the directory pathname when passed through the library functions
 char fullInput[32];                   // Holds the full inputted save file
 
-int analogPin = 0;
+int analogPin = 0;                    // Initializing a variable that will be used to designate the correct analog pin
 
 int sensorCounter = 0;                // Sensor counter variable
 
-bool isSDCardFunctional;
-
-LiquidCrystal lcd(7, 6, 5, 4, 3, 2);  // Initialize the library with the numbers of the interface pins
+bool isSDCardFunctional;              // Boolean to test if there is an SD card being used
+bool wasSDCardInitialized;            // Boolean to check if SD card was already initialized
+                                      // If it wasn't the program needs to be reset to check SD card for correct filename
+                                      
+// Initialize the library with the numbers of the interface pins
+// LiquidCrystal(rs, enable, d0, d1, d2, d3, d4, d5, d6, d7) 
+LiquidCrystal lcd(22, 23, 24, 25, 26, 27, 28, 29, 30, 31);
 
 
 
@@ -33,27 +37,33 @@ void setup() {
   lcd.begin(16, 2);
 
   // Initialize the SD card
-  clarity = sdCardFunctions.initializeSD(10, 8);
+  clarity = sdCardFunctions.initializeSD(53, 49);
   // Check for return value
   if (clarity) {
-    Serial.println(F("Correctly initialized through SDCardFunctionsLibrary"));
     lcd.print("SD card found");
     isSDCardFunctional = true;
   } else {
-    Serial.println(F("Incorrectly initialized through SDCardFunctionsLibrary"));
     lcd.print("SD card");
     lcd.setCursor(0, 1);
     lcd.print("not found");
     isSDCardFunctional = false;
   }
 
-  delayThree(); // Short Delay
+  // Check for directory
+  // If it doesn't exist create it
 
+  // Check for all sensor files
+  // If it doesn't exist create it
+
+  // ?? Maybe put these to library instead ??
+
+  
+  delay(3000);
+
+  
   // Set the time
   setTime(10, 30, 00, 5, 1, 15); // hr, min, sec, day, month, yr
-
-  Serial.println(F("\nEnd of setup()"));
-  Serial.println(F("\n\n"));
+  
 } // End of setup()
 
 
@@ -63,42 +73,36 @@ void loop() {
 
   switch (sensorCounter) {
     case 0:
-      Serial.println(F("On case 0..."));
       strcat(directoryPath, "analog0.txt");
       analogPin = 0;
       sensorCounter++;
       break;
     case 1:
-      Serial.println(F("On case 1..."));
       strcat(directoryPath, "analog1.txt");
       analogPin = 1;
       sensorCounter++;
       break;
     case 2:
-      Serial.println(F("On case 2..."));
       strcat(directoryPath, "analog2.txt");
       analogPin = 2;
       sensorCounter++;
       break;
     case 3:
-      Serial.println(F("On case 3..."));
       strcat(directoryPath, "analog3.txt");
       analogPin = 3;
       sensorCounter++;
       break;
     case 4:
-      Serial.println(F("On case 4..."));
       strcat(directoryPath, "analog4.txt");
       analogPin = 4;
       sensorCounter = 0;
       break;
   }
 
-
   getMemoryNumber();
 
-
   // Get the current time
+  // Initial input text format is xx(month)/xx(day)/xxxx(year) xx(hour):xx(minute).xx(second)
   timeDataInt = month();
   itoa(timeDataInt, timeDataTemp, 10);
   strcat(fullInput, timeDataTemp);
@@ -129,6 +133,7 @@ void loop() {
   itoa(timeDataInt, timeDataTemp, 10);
   strcat(fullInput, timeDataTemp);
   strcat(fullInput, " ");
+  
 
 
   // Get the currently selected sensor value
@@ -150,7 +155,7 @@ void loop() {
   Serial.print(directoryPath);
   Serial.print("...");
 
-
+  // Attaches full input text format is xx/xx/xxxx xx:xx.xx xxx
   strcat(fullInput, sensorDataChar);
 
 
@@ -194,7 +199,7 @@ void loop() {
 
 
   if (isSDCardFunctional == false) {
-    delay(3000);
+    delay(5000);
     clearLCD();
     lcd.print("Data not saved");
     lcd.setCursor(0, 1);
@@ -206,28 +211,17 @@ void loop() {
     clarity = sdCardFunctions.initializeSD(10, 8);
     // Check for return value
     if (clarity) {
-      Serial.println(F("Correctly initialized through SDCardFunctionsLibrary"));
       lcd.print("SD card found");
       isSDCardFunctional = true;
     }
   }
 
-  Serial.println("End of loop. Delay 5 seconds.");
+  Serial.println("End of loop. Delay 2 seconds.");
   getMemoryNumber();
-  delay(5000);
+  delay(2000);
   Serial.println("-----------------------------------------------------------------------\n");
 
 } // End of loop()
-
-void delayThree() {
-  Serial.print(F("\nDelay 3..."));
-  delay(1000);
-  Serial.print(F("2..."));
-  delay(1000);
-  Serial.print(F("1..."));
-  delay(1000);
-  Serial.println(F("Done\n"));
-}
 
 void getMemoryNumber() {
   Serial.print(F("Amount of free memory = "));
