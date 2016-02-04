@@ -9,14 +9,17 @@
  */
 
 /*
- **** Pin Assignments based of Arduino Uno (same in .cpp file) ****
- Sensor Pins             Arduino Pins
- D3 (Chip Select)        8
- CMO (MOSI)              11
- CLK (Clock)             13
- D0 (MISO)               12
- VCC                     3.3 V
- GND                     GND
+ **** Pin Assignments ****
+ Sensor Pins             Arduino Pins (Uno)     Arduino Pins (Mega)
+ D3 (Chip Select)        8                      49
+ CMO (MOSI)              11                     51
+ CLK (Clock)             13                     52
+ D0 (MISO)               12                     50
+ VCC                     3.3 V                  3.3 V
+ GND                     GND                    GND
+ SS Pin(If not used      10                     53
+ still needs to be
+ open)
  */
 
 #ifndef SDCardLibraryFunctions_h
