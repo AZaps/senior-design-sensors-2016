@@ -39,6 +39,8 @@ class SD_Functions {
         // User accessible public interface
 public:
     bool initializeSD(int, int);
+    bool checkForDirectory(char*);
+    bool checkForSensorFile(File, char*);
     void printDirectory(File, int);
     bool writeToSD(File, char*, char*);
     bool readFromSD(File, char*);

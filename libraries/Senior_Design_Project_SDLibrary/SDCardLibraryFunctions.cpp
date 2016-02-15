@@ -43,6 +43,37 @@ bool SD_Functions::initializeSD(int outputSS, int chipSelect) {
     return true;
 }
 
+bool SD_Functions::checkForDirectory(char* directoryPathname) {
+    if (SD.exists(directoryPathname)) {
+            // It exists and can exit
+        return true;
+    } else {
+            // Doesn't exist, need to create it
+        if (SD.mkdir(directoryPathname)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+bool SD_Functions::checkForSensorFile(File myFile, char* sensorFilename) {
+        // Check to see if it exists
+    if (SD.exists(sensorFilename)) {
+        return true;
+    } else {
+            // Create filename
+        myFile = SD.open(sensorFilename,FILE_WRITE);
+        myFile.close();
+            // Make sure it created it
+        if (SD.exists(sensorFilename)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
     // Print directory files
 void SD_Functions::printDirectory(File dir, int numTabs) {
     while (true) {

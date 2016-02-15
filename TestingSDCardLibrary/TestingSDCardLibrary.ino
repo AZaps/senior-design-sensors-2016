@@ -8,12 +8,13 @@
 // Variables
 SD_Functions sdCardFunctions;         // Variable linked to class definition from the library
 bool clarity;                         // Return value check
-File root;                            // Directory path
 File myFile;                          // Filename path
+
 int sensorDataInt = 0;                // Hold the string data from the sensor
 char sensorDataChar[12];              // Holds the converted sensor data from the integer
 int timeDataInt;                      // Holds integer value of time
 char timeDataTemp[5];                 // Temporary holder for integer to char conversion
+char directoryName[8];
 char directoryPath[21] = "/sendata/"; // Hold the directory pathname when passed through the library functions
 char fullInput[32];                   // Holds the full inputted save file
 
@@ -24,7 +25,7 @@ int sensorCounter = 0;                // Sensor counter variable
 bool isSDCardFunctional;              // Boolean to test if there is an SD card being used
 bool wasSDCardInitialized;            // Boolean to check if SD card was already initialized
                                       // If it wasn't the program needs to be reset to check SD card for correct filename
-                                      
+
 // Initialize the library with the numbers of the interface pins
 // LiquidCrystal(rs, enable, d0, d1, d2, d3, d4, d5, d6, d7) 
 LiquidCrystal lcd(22, 23, 24, 25, 26, 27, 28, 29, 30, 31);
@@ -49,14 +50,12 @@ void setup() {
     isSDCardFunctional = false;
   }
 
-  // Check for directory
-  // If it doesn't exist create it
-
-  // Check for all sensor files
-  // If it doesn't exist create it
-
-  // ?? Maybe put these to library instead ??
-
+  // Only do this setup if SD card is inserted otherwise program will crash
+  // Checks to see if directory is created
+  // Checks to see if filenames within directory are created
+  if (isSDCardFunctional) {
+    setupForSDCard();
+  }
   
   delay(3000);
 
@@ -73,27 +72,27 @@ void loop() {
 
   switch (sensorCounter) {
     case 0:
-      strcat(directoryPath, "analog0.txt");
+      strcat(directoryPath, "sen0.txt");
       analogPin = 0;
       sensorCounter++;
       break;
     case 1:
-      strcat(directoryPath, "analog1.txt");
+      strcat(directoryPath, "sen1.txt");
       analogPin = 1;
       sensorCounter++;
       break;
     case 2:
-      strcat(directoryPath, "analog2.txt");
+      strcat(directoryPath, "sen2.txt");
       analogPin = 2;
       sensorCounter++;
       break;
     case 3:
-      strcat(directoryPath, "analog3.txt");
+      strcat(directoryPath, "sen3.txt");
       analogPin = 3;
       sensorCounter++;
       break;
     case 4:
-      strcat(directoryPath, "analog4.txt");
+      strcat(directoryPath, "sen4.txt");
       analogPin = 4;
       sensorCounter = 0;
       break;
@@ -208,11 +207,12 @@ void loop() {
     clearLCD();
 
     // Check if SD card was inserted
-    clarity = sdCardFunctions.initializeSD(10, 8);
+    clarity = sdCardFunctions.initializeSD(53, 49);
     // Check for return value
     if (clarity) {
       lcd.print("SD card found");
       isSDCardFunctional = true;
+      setupForSDCard();
     }
   }
 
@@ -251,6 +251,71 @@ void printSensorDataLCD(int sensorNumber, int sensorValue) {
   lcd.print(sensorValue);
 }
 
+void setupForSDCard() {
+  // Check for directory
+  // Specify directory name
+  getMemoryNumber();
+  strcat(directoryName, "sendata");
+  // Open root folder to check
+  myFile = SD.open("/");
+  clarity = sdCardFunctions.checkForDirectory(directoryName);
+  if (clarity) {
+    Serial.print("Directory ");
+    Serial.print(directoryName);
+    Serial.println(" created or already exists");
+  } else {
+    Serial.print("Directory ");
+    Serial.print(directoryName);
+    Serial.println(" not created");
+  }
+  myFile.close();
+  // Check for individual sensor files
+  // CHANGE sensorCounter COUNTER FOR AMOUNT OF SENSORS WE USE
+  for (int filenameCounter = 0; filenameCounter < 5; filenameCounter++) {
+    switch (filenameCounter) {
+      case 0:
+        strcat(directoryPath, "sen0.txt");
+        break;
+      case 1:
+        strcat(directoryPath, "sen1.txt");
+        break;
+      case 2:
+        strcat(directoryPath, "sen2.txt");
+        break;
+      case 3:
+        strcat(directoryPath, "sen3.txt");
+        break;
+      case 4:
+        strcat(directoryPath, "sen4.txt");
+        break;
+    }
+    myFile = SD.open("/sendata/");
+    // Send over filename to be created
+    clarity = sdCardFunctions.checkForSensorFile(myFile, directoryPath);
+    if (clarity) {
+      Serial.print("directoryPath/filename ");
+      Serial.print(directoryPath);
+      Serial.println(" created");
+    } else {
+      Serial.print("directoryPath/filename ");
+      Serial.print(directoryPath);
+      Serial.println(" not created");
+    }
+    // Reset the directory path filename
+    memset(directoryPath, 0, sizeof(directoryPath));
+    strcat(directoryPath, "/sendata/");
+    delay(2000);
+  }
+  myFile.close(); 
+  getMemoryNumber();
+
+  clearLCD();
+  lcd.print("Directory and");
+  lcd.setCursor(0,1);
+  lcd.print("files created");
+  delay(5000);
+  clearLCD();
+}
 
 
 
