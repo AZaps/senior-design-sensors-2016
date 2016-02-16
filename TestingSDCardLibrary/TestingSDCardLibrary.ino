@@ -8,27 +8,33 @@
 // Variables
 SD_Functions sdCardFunctions;         // Variable linked to class definition from the library
 bool clarity;                         // Return value check
+
+bool isSDCardFunctional;              // Boolean to test if there is an SD card being used
+bool wasSDCardInitialized;            // Boolean to check if SD card was already initialized
+                                      // If it wasn't the program needs to be reset to check SD card for correct filename
+                                      
 File myFile;                          // Filename path
 
 int sensorDataInt = 0;                // Hold the string data from the sensor
 char sensorDataChar[12];              // Holds the converted sensor data from the integer
+
 int timeDataInt;                      // Holds integer value of time
 char timeDataTemp[5];                 // Temporary holder for integer to char conversion
-char directoryName[8];
+
+char directoryName[8];                // Used for holding the name of the directory to save sensor information in
+
 char directoryPath[21] = "/sendata/"; // Hold the directory pathname when passed through the library functions
+
 char fullInput[32];                   // Holds the full inputted save file
 
 int analogPin = 0;                    // Initializing a variable that will be used to designate the correct analog pin
 
 int sensorCounter = 0;                // Sensor counter variable
 
-bool isSDCardFunctional;              // Boolean to test if there is an SD card being used
-bool wasSDCardInitialized;            // Boolean to check if SD card was already initialized
-                                      // If it wasn't the program needs to be reset to check SD card for correct filename
-
 // Initialize the library with the numbers of the interface pins
 // LiquidCrystal(rs, enable, d0, d1, d2, d3, d4, d5, d6, d7) 
 LiquidCrystal lcd(22, 23, 24, 25, 26, 27, 28, 29, 30, 31);
+
 
 
 
@@ -59,11 +65,12 @@ void setup() {
   
   delay(3000);
 
-  
   // Set the time
   setTime(10, 30, 00, 5, 1, 15); // hr, min, sec, day, month, yr
   
 } // End of setup()
+
+
 
 
 void loop() {
@@ -133,7 +140,6 @@ void loop() {
   strcat(fullInput, timeDataTemp);
   strcat(fullInput, " ");
   
-
 
   // Get the currently selected sensor value
   sensorDataInt = analogRead(analogPin);
