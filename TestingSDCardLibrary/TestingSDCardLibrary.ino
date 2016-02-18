@@ -36,8 +36,6 @@ int sensorCounter = 0;                // Sensor counter variable
 LiquidCrystal lcd(22, 23, 24, 25, 26, 27, 28, 29, 30, 31);
 
 
-
-
 void setup() {
 
   // Set the LCD's number of columns and rows
@@ -66,17 +64,16 @@ void setup() {
   delay(3000);
 
   // Set the time
-  setTime(10, 30, 00, 5, 1, 15); // hr, min, sec, day, month, yr
-  
+  setTime(10, 30, 00, 15, 2, 16); // hr, min, sec, day, month, yr
+ 
 } // End of setup()
 
 
 
 
 void loop() {
-  // Clear LCD display
-  clearLCD();
-
+  lcd.setCursor(0,0);
+  
   switch (sensorCounter) {
     case 0:
       strcat(directoryPath, "sen0.txt");
@@ -105,7 +102,7 @@ void loop() {
       break;
   }
 
-  getMemoryNumber();
+  //getMemoryNumber();
 
   // Get the current time
   // Initial input text format is xx(month)/xx(day)/xxxx(year) xx(hour):xx(minute).xx(second)
@@ -126,29 +123,26 @@ void loop() {
   strcat(fullInput, " ");
 
   timeDataInt = hour();
+  if (hour() < 10) {strcat(fullInput, "0");};
   itoa(timeDataInt, timeDataTemp, 10);
   strcat(fullInput, timeDataTemp);
   strcat(fullInput, ":");
 
   timeDataInt = minute();
-  itoa(timeDataInt, timeDataTemp, 10);
-  strcat(fullInput, timeDataTemp);
-  strcat(fullInput, ".");
-
-  timeDataInt = second();
+  if (minute() < 10) {strcat(fullInput, "0");};
   itoa(timeDataInt, timeDataTemp, 10);
   strcat(fullInput, timeDataTemp);
   strcat(fullInput, " ");
-  
+
 
   // Get the currently selected sensor value
   sensorDataInt = analogRead(analogPin);
   // Convert the read in data to a string to be saved to the SD card
   itoa(sensorDataInt, sensorDataChar, 10);
-  Serial.print("The sensor data that was read was from analog pin... ");
-  Serial.print(analogPin);
-  Serial.print(" the value is... ");
-  Serial.println(sensorDataChar);
+//  Serial.print("The sensor data that was read was from analog pin... ");
+//  Serial.print(analogPin);
+//  Serial.print(" the value is... ");
+//  Serial.println(sensorDataChar);
 
 
   printSensorDataLCD(analogPin, sensorDataInt);
@@ -156,9 +150,9 @@ void loop() {
 
 
   // Select the correct file path name.
-  Serial.print("Attempt to write to ");
-  Serial.print(directoryPath);
-  Serial.print("...");
+//  Serial.print("Attempt to write to ");
+//  Serial.print(directoryPath);
+//  Serial.print("...");
 
   // Attaches full input text format is xx/xx/xxxx xx:xx.xx xxx
   strcat(fullInput, sensorDataChar);
@@ -168,30 +162,31 @@ void loop() {
   myFile = SD.open(directoryPath, FILE_WRITE);
   clarity = sdCardFunctions.writeToSD(myFile, fullInput, directoryPath);
   if (clarity) {
-    Serial.println("The file was opened correctly and the data was saved to it.");
-    getMemoryNumber();
+    //Serial.println("The file was opened correctly and the data was saved to it.");
+    //getMemoryNumber();
   } else {
-    Serial.println("Something happened. Either the file did not open correctly or not saved correctly");
+    //Serial.println("Something happened. Either the file did not open correctly or not saved correctly");
     isSDCardFunctional = false;
     getMemoryNumber();
   }
 
 
-  // Reading from the SD card. Don't need this later, only for testing purposes and writing checking
-  myFile = SD.open(directoryPath);
-  clarity = sdCardFunctions.readFromSD(myFile, directoryPath);
-  if (clarity) {
-    Serial.print("Done reading from ");
-    Serial.println(directoryPath);
-    getMemoryNumber();
-  } else {
-    Serial.print("Could not read from ");
-    Serial.println(directoryPath);
-    isSDCardFunctional = false;
-    getMemoryNumber();
-  }
+//  // Reading from the SD card. Don't need this later, only for testing purposes and writing checking
+//  myFile = SD.open(directoryPath);
+//  clarity = sdCardFunctions.readFromSD(myFile, directoryPath);
+//  if (clarity) {
+//    Serial.print("Done reading from ");
+//    Serial.println(directoryPath);
+//    getMemoryNumber();
+//  } else {
+//    Serial.print("Could not read from ");
+//    Serial.println(directoryPath);
+//    isSDCardFunctional = false;
+//    getMemoryNumber();
+//  }
+  
+  
   myFile.close();
-
 
   // Revert all the variables for the next read
   sensorDataInt = 0;
@@ -201,7 +196,6 @@ void loop() {
   memset(directoryPath, 0, sizeof(directoryPath));
 
   strcat(directoryPath, "/sendata/");
-
 
   if (isSDCardFunctional == false) {
     delay(5000);
@@ -222,9 +216,6 @@ void loop() {
     }
   }
 
-  Serial.println("End of loop. Delay 2 seconds.");
-  getMemoryNumber();
-  delay(2000);
   Serial.println("-----------------------------------------------------------------------\n");
 
 } // End of loop()
@@ -244,8 +235,10 @@ void clearLCD() {
 
 void printTime() {
   lcd.setCursor(0, 1);
+  if (hour() < 10) {lcd.print("0");}
   lcd.print(hour());
   lcd.print(":");
+  if (minute() < 10) {lcd.print("0");}
   lcd.print(minute());
 }
 
